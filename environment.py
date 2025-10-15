@@ -3,6 +3,7 @@ from enum import Enum, auto
 from typing import Deque, Optional
 from element import Element
 from objects import *
+import uuid
 
 class ScopeRule(Enum):
     STATIC = auto()
@@ -13,14 +14,6 @@ class ENV_STATUS(Enum):
     IDENTIFIER_NOT_FOUND = auto()
     REDEFINE = auto()
     FAILURE = auto()
-
-class OBJECT_TYPES:
-    INT = auto()
-    FLOAT = auto()
-    FUNCTION = auto()
-    STRING = auto()
-    OBJECT = auto()
-    UNINITIALIZED = auto()
 
 
 
@@ -83,7 +76,8 @@ class Environment:
             obj_type = OBJECT_TYPES.UNINITIALIZED
 
         
-        STATUS = Environment.create_object(name=identifier, node=node, env=self, value=value, obj_type=obj_type)
+        obj = Environment.create_object(name=identifier, node=node, env=self, value=value, obj_type=obj_type)
+        STATUS = self.current_frame.define_identifier(identifier=identifier, value=obj)
         return STATUS
  
     def assign_identifier(self, identifier, value):
@@ -117,6 +111,9 @@ class Environment:
     
     @classmethod
     def create_object(cls, name: str, node: Element, env: "Environment", value: any = None, obj_type: Enum = OBJECT_TYPES.OBJECT):
+        if not name:
+            name = f"_lit_{uuid.uuid4().hex}"
+
         obj = None
         if obj_type == OBJECT_TYPES.INT:
             obj = Int(name, value)
@@ -134,11 +131,9 @@ class Environment:
         elif obj_type == OBJECT_TYPES.STRING:
             obj = String(name, value)
         elif obj_type == OBJECT_TYPES.UNINITIALIZED:
-            obj = None
+            obj = None    
 
-        STATUS = env.current_frame.define_identifier(name, obj)
-
-        return STATUS
+        return obj
 
 
 

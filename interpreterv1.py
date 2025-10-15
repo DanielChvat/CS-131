@@ -27,6 +27,7 @@ class Interpreter(InterpreterBase):
         program_node = parse_program(program)
 
         self.eval_program(program_node)
+        self.env.pop_frame()
 
     
     def eval_program(self, node: Element):
@@ -41,7 +42,7 @@ class Interpreter(InterpreterBase):
             self.eval_function_def(def_node)
     
     def eval_function_def(self, node: Element):
-        Environment.create_object(name = node.get('name'), node=node, env=self.env, value=None, obj_type=OBJECT_TYPES.FUNCTION)
+        self.env.define_identifier(identifier=node.get('name'), node=node)
         func_obj: FunctionObject = self.env.retrieve(node.get('name'))
 
         if func_obj.get('name') == 'main':
@@ -58,7 +59,7 @@ class Interpreter(InterpreterBase):
 
     def eval_vardef(self, node: Element) -> None:
         identifier = node.get('name')
-        if self.env.define_identifier(identifier=identifier, node=node, ) == ENV_STATUS.REDEFINE:
+        if self.env.define_identifier(identifier=identifier, node=node) == ENV_STATUS.REDEFINE:
             super().error(ErrorType.NAME_ERROR, f'Redefinition of {identifier}')
     
     def eval_assign(self, node: Element) -> None:
@@ -83,8 +84,9 @@ class Interpreter(InterpreterBase):
                 super().error(ErrorType.TYPE_ERROR, f'{val1} or {val2} must be an integer')
 
             if element_type == '+':
-                return val1 + val2
-            else: return val1 - val2
+                return Environment.create_object(name="", node=None, env=self.env, value=val1 + val2, obj_type=OBJECT_TYPES.INT)
+            else: 
+                return Environment.create_object(name="", node=None, env=self.env, value=val1 - val2, obj_type=OBJECT_TYPES.INT)
         elif element_type == self.FCALL_NODE:
             return self.fcall(node)
         elif element_type == self.QUALIFIED_NAME_NODE:
@@ -100,9 +102,12 @@ class Interpreter(InterpreterBase):
             return value
         
         elif element_type == self.INT_NODE:
-            return node.get('val')
+            value = node.get('val')
+            return Environment.create_object(name="", node=None, env=self.env, value=value, obj_type=OBJECT_TYPES.INT)
+
         elif element_type == self.STRING_NODE:
-            return node.get('val')
+            value = node.get('val')
+            return Environment.create_object(name="", node=None, env=self.env, value=value, obj_type=OBJECT_TYPES.STRING)
 
     def fcall(self, node: FunctionObject):
         identifier = node.get('name')
@@ -136,7 +141,8 @@ class Interpreter(InterpreterBase):
                 for name, value in args:
                     return_string += str(value)
 
-                self.builtin_dict['print'](return_string) 
+                self.builtin_dict['print'](return_string)
+                self.env.pop_frame()
 
             if identifier == 'inputi':
                 return_string = ""
@@ -144,23 +150,6 @@ class Interpreter(InterpreterBase):
                     return_string += str(value)
 
                 self.builtin_dict['print'](return_string)
-                return self.builtin_dict['inputi']()
-
-
-                
-            
-
-
-
-
-
-
-        
-
-
-        
-
-
-        
-
-        
+                result_obj = Environment.create_object(name="", node=None, env=self.env, value=self.builtin_dict['inputi'](), obj_type=OBJECT_TYPES.STRING)
+                self.env.pop_frame()
+                return result_obj

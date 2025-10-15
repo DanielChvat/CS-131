@@ -1,4 +1,13 @@
 from abc import ABC, abstractmethod
+from enum import Enum, auto
+
+class OBJECT_TYPES(Enum):
+    INT = auto()
+    FLOAT = auto()
+    FUNCTION = auto()
+    STRING = auto()
+    OBJECT = auto()
+    UNINITIALIZED = auto()
 
 class ObjectInterface(ABC):
     def __init__(self, type):
@@ -6,7 +15,7 @@ class ObjectInterface(ABC):
         self.lexical_parent = None
 
     @abstractmethod
-    def to_string(self):
+    def __str__(self):
         "Returns a string representation for printing"
         pass
     
@@ -23,7 +32,7 @@ class FunctionObject(ObjectInterface):
             return None
         return self.dict[key]
 
-    def to_string(self):
+    def __str__(self):
         return f"<function {self.name} at {hex(id(self))}>"
 
 class Int(ObjectInterface):
@@ -32,7 +41,14 @@ class Int(ObjectInterface):
         self.dict = {}
         self.dict['name'] = name
 
-    def to_string(self):
+    def __add__(self, obj2: "Int"):
+        return self.value + obj2.value
+    
+    def __sub__(self, obj2: "Int"):
+        return self.value - obj2.value
+        
+
+    def __str__(self):
         return str(self.value)
 
 class Float(ObjectInterface):
@@ -41,7 +57,10 @@ class Float(ObjectInterface):
         self.dict = {}
         self.dict['name'] = name
 
-    def to_string(self):
+    def __add__(self, obj2: "Float"):
+        return Float(self.value + obj2.value)
+
+    def __str__(self):
         return str(self.value)
 
 class String(ObjectInterface):
@@ -50,5 +69,5 @@ class String(ObjectInterface):
         self.dict = {}
         self.dict['name'] = name
 
-    def to_string(self):
+    def __str__(self):
         return self.value
