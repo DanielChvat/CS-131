@@ -18,8 +18,9 @@ class OBJECT_TYPES:
     INT = auto()
     FLOAT = auto()
     FUNCTION = auto()
-    STR = auto()
+    STRING = auto()
     OBJECT = auto()
+    UNINITIALIZED = auto()
 
 
 
@@ -68,8 +69,21 @@ class Environment:
         
         return ENV_STATUS.FAILURE
     
-    def define_identifier(self, identifier, value):
-        STATUS = self.current_frame.define_identifier(identifier=identifier, value=value)
+    def define_identifier(self, identifier: str, value: any = None, node: Element = None):
+        obj_type = None
+        if isinstance(value, int):
+            obj_type = OBJECT_TYPES.INT
+        elif isinstance(value, float):
+            obj_type = OBJECT_TYPES.FLOAT
+        elif isinstance(value, str):
+            obj_type = OBJECT_TYPES.STRING
+        elif node.elem_type == 'func':
+            obj_type = OBJECT_TYPES.FUNCTION
+        elif value == None:
+            obj_type = OBJECT_TYPES.UNINITIALIZED
+
+        
+        STATUS = Environment.create_object(name=identifier, node=node, env=self, value=value, obj_type=obj_type)
         return STATUS
  
     def assign_identifier(self, identifier, value):
@@ -103,7 +117,7 @@ class Environment:
     
     @classmethod
     def create_object(cls, name: str, node: Element, env: "Environment", value: any = None, obj_type: Enum = OBJECT_TYPES.OBJECT):
-
+        obj = None
         if obj_type == OBJECT_TYPES.INT:
             obj = Int(name, value)
         elif obj_type == OBJECT_TYPES.FLOAT:
@@ -117,8 +131,12 @@ class Environment:
                 statements=statements,
                 lexical_parent=env.current_frame
             )
+        elif obj_type == OBJECT_TYPES.STRING:
+            obj = String(name, value)
+        elif obj_type == OBJECT_TYPES.UNINITIALIZED:
+            obj = None
 
-        STATUS = env.define_identifier(name, obj)
+        STATUS = env.current_frame.define_identifier(name, obj)
 
         return STATUS
 

@@ -44,7 +44,7 @@ class Float(ObjectInterface):
     def to_string(self):
         return str(self.value)
 
-class Str(ObjectInterface):
+class String(ObjectInterface):
     def __init__(self, name: str, value: str):
         self.value = value
         self.dict = {}

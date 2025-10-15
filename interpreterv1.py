@@ -58,7 +58,7 @@ class Interpreter(InterpreterBase):
 
     def eval_vardef(self, node: Element) -> None:
         identifier = node.get('name')
-        if self.env.define_identifier(identifier=identifier, value=None) == ENV_STATUS.REDEFINE:
+        if self.env.define_identifier(identifier=identifier, node=node, ) == ENV_STATUS.REDEFINE:
             super().error(ErrorType.NAME_ERROR, f'Redefinition of {identifier}')
     
     def eval_assign(self, node: Element) -> None:
@@ -115,7 +115,7 @@ class Interpreter(InterpreterBase):
         self.env.push_frame(static_link=self.env.current_frame)
 
         for arg_name, arg_value in args:
-            if self.env.define_identifier(arg_name, arg_value) == ENV_STATUS.REDEFINE:
+            if self.env.define_identifier(identifier=arg_name, value=arg_value, node=node) == ENV_STATUS.REDEFINE:
                 super().error(ErrorType.NAME_ERROR, f'Redefinition of {arg_name}')
 
 
