@@ -2,7 +2,7 @@ from intbase import InterpreterBase, ErrorType
 from environment import ENV_STATUS
 from brewparse import parse_program
 from element import Element
-from environment import Environment
+from environment import *
 from objects import *
 
 class RETURN:
@@ -41,7 +41,7 @@ class Interpreter(InterpreterBase):
             self.eval_function_def(def_node)
     
     def eval_function_def(self, node: Element):
-        Environment.create_function_obj(node, self.env)
+        Environment.create_object(name = node.get('name'), node=node, env=self.env, value=None, obj_type=OBJECT_TYPES.FUNCTION)
         func_obj: FunctionObject = self.env.retrieve(node.get('name'))
 
         if func_obj.get('name') == 'main':

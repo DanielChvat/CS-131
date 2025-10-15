@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-class Object(ABC):
+class ObjectInterface(ABC):
     def __init__(self, type):
         self.type = type
         self.lexical_parent = None
@@ -10,7 +10,7 @@ class Object(ABC):
         "Returns a string representation for printing"
         pass
     
-class FunctionObject(Object):
+class FunctionObject(ObjectInterface):
     def __init__(self, name, args, statements, lexical_parent):
         self.dict = {}
         self.statements = statements
@@ -26,23 +26,29 @@ class FunctionObject(Object):
     def to_string(self):
         return f"<function {self.name} at {hex(id(self))}>"
 
-class Int(Object):
-    def __init__(self, value: int):
+class Int(ObjectInterface):
+    def __init__(self, name: str, value: int):
         self.value = value
+        self.dict = {}
+        self.dict['name'] = name
 
     def to_string(self):
         return str(self.value)
 
-class Float(Object):
-    def __init__(self, value: float):
+class Float(ObjectInterface):
+    def __init__(self, name: str, value: float):
         self.value = value
+        self.dict = {}
+        self.dict['name'] = name
 
     def to_string(self):
         return str(self.value)
 
-class Str(Object):
-    def __init__(self, value: str):
+class Str(ObjectInterface):
+    def __init__(self, name: str, value: str):
         self.value = value
+        self.dict = {}
+        self.dict['name'] = name
 
     def to_string(self):
         return self.value

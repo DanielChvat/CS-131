@@ -1,6 +1,7 @@
 from collections import deque
 from enum import Enum, auto
 from typing import Deque, Optional
+from element import Element
 from objects import *
 
 class ScopeRule(Enum):
@@ -8,10 +9,17 @@ class ScopeRule(Enum):
     DYNAMIC = auto()
 
 class ENV_STATUS(Enum):
-    SUCCESS = 1
-    IDENTIFIER_NOT_FOUND = None
-    REDEFINE = 2
-    FAILURE = -1
+    SUCCESS = auto()
+    IDENTIFIER_NOT_FOUND = auto()
+    REDEFINE = auto()
+    FAILURE = auto()
+
+class OBJECT_TYPES:
+    INT = auto()
+    FLOAT = auto()
+    FUNCTION = auto()
+    STR = auto()
+    OBJECT = auto()
 
 
 
@@ -93,21 +101,27 @@ class Environment:
 
         return ENV_STATUS.IDENTIFIER_NOT_FOUND
     
-    @classmethod 
-    def create_function_obj(cls, node, env: "Environment"):
-        name = node.get('name')
-        args = node.get('args')
-        statements = node.get('statements')
-        obj = FunctionObject(
-            name=name,
-            args=args,
-            statements=statements,
-            lexical_parent=env.current_frame
-        )
+    @classmethod
+    def create_object(cls, name: str, node: Element, env: "Environment", value: any = None, obj_type: Enum = OBJECT_TYPES.OBJECT):
+
+        if obj_type == OBJECT_TYPES.INT:
+            obj = Int(name, value)
+        elif obj_type == OBJECT_TYPES.FLOAT:
+            obj = Float(name, value)
+        elif obj_type == OBJECT_TYPES.FUNCTION:
+            args = node.get('args')
+            statements = node.get('statements')
+            obj = FunctionObject(
+                name=name,
+                args=args,
+                statements=statements,
+                lexical_parent=env.current_frame
+            )
 
         STATUS = env.define_identifier(name, obj)
 
         return STATUS
+
 
 
     
