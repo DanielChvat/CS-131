@@ -130,15 +130,24 @@ class Interpreter(InterpreterBase):
             self.env.pop_frame()
             return return_val
         else:
-            builtin_func = self.builtin_dict[identifier]
-
             if identifier == 'print':
                 return_string = ""
 
                 for name, value in args:
                     return_string += str(value)
 
-                builtin_func(return_string) 
+                self.builtin_dict['print'](return_string) 
+
+            if identifier == 'inputi':
+                return_string = ""
+                for name, value in args:
+                    return_string += str(value)
+
+                self.builtin_dict['print'](return_string)
+                return self.builtin_dict['inputi']()
+
+
+                
             
 
 

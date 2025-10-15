@@ -82,7 +82,7 @@ class Environment:
         if self.scope_rule == ScopeRule.DYNAMIC:
             for frame in reversed(self.frames):
                 value = frame.retrieve(identifier=identifier)
-                if value != None: return value
+                if value != ENV_STATUS.IDENTIFIER_NOT_FOUND: return value
 
         elif self.scope_rule == ScopeRule.STATIC:
             frame = self.current_frame
