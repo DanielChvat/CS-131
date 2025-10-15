@@ -10,7 +10,9 @@ class ScopeRule(Enum):
 class ENV_STATUS(Enum):
     SUCCESS = 1
     IDENTIFIER_NOT_FOUND = None
+    REDEFINE = 2
     FAILURE = -1
+
 
 
 class Frame:
@@ -19,6 +21,8 @@ class Frame:
         self.lexical_parent: Optional['Frame'] = lexical_parent
     
     def define_identifier(self, identifier, value) -> ENV_STATUS:
+        if identifier in self.var.keys():
+            return ENV_STATUS.REDEFINE
         self.var[identifier] = value
         return ENV_STATUS.SUCCESS
 
@@ -57,7 +61,8 @@ class Environment:
         return ENV_STATUS.FAILURE
     
     def define_identifier(self, identifier, value):
-        self.current_frame.define_identifier(identifier=identifier, value=value)
+        STATUS = self.current_frame.define_identifier(identifier=identifier, value=value)
+        return STATUS
  
     def assign_identifier(self, identifier, value):
         if self.scope_rule == ScopeRule.DYNAMIC:
@@ -102,7 +107,7 @@ class Environment:
 
         STATUS = env.define_identifier(name, obj)
 
-        return obj
+        return STATUS
 
 
     

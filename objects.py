@@ -10,15 +10,18 @@ class Object(ABC):
         "Returns a string representation for printing"
         pass
     
-
-
 class FunctionObject(Object):
     def __init__(self, name, args, statements, lexical_parent):
-        self.name = name
-        self.args = args
+        self.dict = {}
         self.statements = statements
         self.lexical_parent = lexical_parent
-        
+        self.dict['name'] = name
+        self.dict['args'] = args
+
+    def get(self, key):
+        if key not in self.dict:
+            return None
+        return self.dict[key]
 
     def to_string(self):
         return f"<function {self.name} at {hex(id(self))}>"
