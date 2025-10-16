@@ -65,14 +65,13 @@ class Interpreter(InterpreterBase):
     
     def eval_assign(self, node: Element) -> None:
         identifier = node.get('var')
-        STATUS = self.env.assign_identifier(identifier=identifier, value=None)
-        if STATUS == ENV_STATUS.IDENTIFIER_NOT_FOUND:
-            super().error(ErrorType.NAME_ERROR, f'{identifier} has not been declared')
-
         expression_node = node.get('expression')
+
         expression_val = self.eval_expr(expression_node)
 
         STATUS = self.env.assign_identifier(identifier=identifier, value=expression_val)
+        if STATUS == ENV_STATUS.IDENTIFIER_NOT_FOUND:
+            super().error(ErrorType.NAME_ERROR, f'Variable {identifier} has not been defined')
 
 
 
@@ -87,17 +86,8 @@ class Interpreter(InterpreterBase):
             val1 = self.eval_expr(operand_1_node)
             val2 = self.eval_expr(operand_2_node)
 
-            if type(val1) != Int:
-                try:
-                    val1 = Environment.create_object(name="", node=None, env=self.env, value=int(val1.value), obj_type=OBJECT_TYPES.INT)
-                except:
-                    super().error(ErrorType.TYPE_ERROR, f'{val1.value} is not an integer')
-
-            if type(val2) != Int:
-                try:
-                    val2 = Environment.create_object(name="", node=None, env=self.env, value=int(val2.value), obj_type=OBJECT_TYPES.INT)
-                except:
-                    super().error(ErrorType.TYPE_ERROR, f'{val2.value} is not an integer')
+            if isinstance(val1, String) or isinstance(val2, String):
+                super().error(ErrorType.TYPE_ERROR, '+ operation can only be applied to ints')
 
 
             if element_type == '+':
@@ -178,6 +168,6 @@ class Interpreter(InterpreterBase):
 
 
                 if return_string != '': self.builtin_dict['print'](return_string)
-                result_obj = Environment.create_object(name="", node=None, env=self.env, value=self.builtin_dict['inputi'](), obj_type=OBJECT_TYPES.STRING)
+                result_obj = Environment.create_object(name="", node=None, env=self.env, value=int(self.builtin_dict['inputi']()), obj_type=OBJECT_TYPES.INT)
                 self.env.pop_frame()
                 return result_obj
