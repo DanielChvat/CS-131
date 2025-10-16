@@ -4,6 +4,7 @@ from brewparse import parse_program
 from element import Element
 from environment import *
 from objects import *
+import uuid
 
 class RETURN:
     def __init__(self, value):
@@ -64,10 +65,16 @@ class Interpreter(InterpreterBase):
     
     def eval_assign(self, node: Element) -> None:
         identifier = node.get('var')
+        STATUS = self.env.assign_identifier(identifier=identifier, value=None)
+        if STATUS == ENV_STATUS.IDENTIFIER_NOT_FOUND:
+            super().error(ErrorType.NAME_ERROR, f'{identifier} has not been declared')
+
         expression_node = node.get('expression')
         expression_val = self.eval_expr(expression_node)
 
         STATUS = self.env.assign_identifier(identifier=identifier, value=expression_val)
+
+
 
     def eval_expr(self, node: Element):
         element_type = node.elem_type
@@ -80,8 +87,18 @@ class Interpreter(InterpreterBase):
             val1 = self.eval_expr(operand_1_node)
             val2 = self.eval_expr(operand_2_node)
 
-            if isinstance(val1, str) or isinstance(val2, str):
-                super().error(ErrorType.TYPE_ERROR, f'{val1} or {val2} must be an integer')
+            if type(val1) != Int:
+                try:
+                    val1 = Environment.create_object(name="", node=None, env=self.env, value=int(val1.value), obj_type=OBJECT_TYPES.INT)
+                except:
+                    super().error(ErrorType.TYPE_ERROR, f'{val1.value} is not an integer')
+
+            if type(val2) != Int:
+                try:
+                    val2 = Environment.create_object(name="", node=None, env=self.env, value=int(val2.value), obj_type=OBJECT_TYPES.INT)
+                except:
+                    super().error(ErrorType.TYPE_ERROR, f'{val2.value} is not an integer')
+
 
             if element_type == '+':
                 return Environment.create_object(name="", node=None, env=self.env, value=val1 + val2, obj_type=OBJECT_TYPES.INT)
@@ -96,11 +113,15 @@ class Interpreter(InterpreterBase):
                 super().error(ErrorType.NAME_ERROR, f"Variable {identifier} has not been defined")
 
             value = self.env.retrieve(identifier=identifier)
-            if value == ENV_STATUS.IDENTIFIER_NOT_FOUND:
+            if value == OBJECT_TYPES.UNINITIALIZED:
                 super().error(ErrorType.NAME_ERROR, f'Variable {identifier} was defined but not initialized')
 
+            elif value == ENV_STATUS.IDENTIFIER_NOT_FOUND:
+                super().error(ErrorType.NAME_ERROR, f"Variable {identifier} has not been defined")
+
             return value
-        
+        elif element_type == self.NEG_NODE:
+            super().error(ErrorType.NAME_ERROR)
         elif element_type == self.INT_NODE:
             value = node.get('val')
             return Environment.create_object(name="", node=None, env=self.env, value=value, obj_type=OBJECT_TYPES.INT)
@@ -112,10 +133,13 @@ class Interpreter(InterpreterBase):
     def fcall(self, node: FunctionObject):
         identifier = node.get('name')
 
+        if self.env.retrieve(identifier=identifier) == ENV_STATUS.IDENTIFIER_NOT_FOUND and identifier not in self.builtin_dict.keys():
+            self.error(ErrorType.NAME_ERROR, f'{identifier} is not defined')
+
         if identifier not in self.builtin_dict.keys() and not isinstance(node, FunctionObject):
             self.error(ErrorType.TYPE_ERROR, f'{identifier} is not callable')
         return_val = None
-        args = [(arg.get('name'), self.eval_expr(arg)) for arg in node.get('args')]
+        args = [(arg.dict.get('name', f"_lit_{uuid.uuid4().hex}"), self.eval_expr(arg)) for arg in node.get('args')]
 
         self.env.push_frame(static_link=self.env.current_frame)
 
@@ -145,11 +169,15 @@ class Interpreter(InterpreterBase):
                 self.env.pop_frame()
 
             if identifier == 'inputi':
-                return_string = ""
+                if len(args) > 1:
+                    super().error(ErrorType.NAME_ERROR, 'inputi() takes 0 or 1 arguments')
+
+                return_string = ''
                 for name, value in args:
                     return_string += str(value)
 
-                self.builtin_dict['print'](return_string)
+
+                if return_string != '': self.builtin_dict['print'](return_string)
                 result_obj = Environment.create_object(name="", node=None, env=self.env, value=self.builtin_dict['inputi'](), obj_type=OBJECT_TYPES.STRING)
                 self.env.pop_frame()
                 return result_obj

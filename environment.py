@@ -131,7 +131,7 @@ class Environment:
         elif obj_type == OBJECT_TYPES.STRING:
             obj = String(name, value)
         elif obj_type == OBJECT_TYPES.UNINITIALIZED:
-            obj = None    
+            obj = OBJECT_TYPES.UNINITIALIZED
 
         return obj
 
